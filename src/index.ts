@@ -12,6 +12,7 @@ const postCSSPlugin: PostCSSPlugin = ({
   modulesOptions = {},
   modulesFilter = /\.module.css$/,
   plugins = [],
+  processOptions = {},
   disableCache,
 } = {}): Plugin => {
   return {
@@ -19,7 +20,7 @@ const postCSSPlugin: PostCSSPlugin = ({
     setup(build: PluginBuild) {
       const cssMap = new Map();
       const cache = disableCache ? new FakeCache() : new TransformCache();
-      const processCSS = makeProcessCSS(plugins);
+      const processCSS = makeProcessCSS(plugins, processOptions);
       const processModuleCss = makeProcessModuleCss(plugins, modulesOptions);
 
       build.onResolve({ filter: modulesFilter }, async (args) => {

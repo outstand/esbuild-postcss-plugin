@@ -1,5 +1,5 @@
 import { Plugin } from "esbuild";
-import { AcceptedPlugin } from "postcss";
+import { AcceptedPlugin, ProcessOptions } from "postcss";
 
 type PostCSSPluginOptions = {
   baseUrl?: string;
@@ -7,10 +7,13 @@ type PostCSSPluginOptions = {
   modulesFilter?: RegExp;
   modulesOptions?: ModulesOptions;
   plugins?: AcceptedPlugin[];
+  processOptions?: PostCSSProcessOptions;
   disableCache?: true;
 };
 
 export type PostCSSPlugin = (options?: PostCSSPluginOptions) => Plugin;
+
+export type PostCSSProcessOptions = Omit<ProcessOptions, "from" | "map" | "to">
 
 type GenerateScopedNameFunction = (
   name: string,

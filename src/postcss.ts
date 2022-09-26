@@ -1,5 +1,6 @@
 import postcss, { AcceptedPlugin } from "postcss";
 import cssModules from "postcss-modules";
+import { PostCSSProcessOptions } from "./types";
 
 interface Processor {
   (input: string, filePath: string): Promise<
@@ -7,10 +8,10 @@ interface Processor {
   >;
 }
 
-export const makeProcessCSS = (plugins: AcceptedPlugin[]): Processor => {
+export const makeProcessCSS = (plugins: AcceptedPlugin[], processOptions: PostCSSProcessOptions): Processor => {
   if (plugins.length === 0) return (input: string) => Promise.resolve([input]);
 
-  const process = makeProcess(plugins);
+  const process = makeProcess(plugins, processOptions);
   return async (input: string, filePath: string) => {
     const result = await process(input, filePath);
     return [result.css];
@@ -39,8 +40,8 @@ export const makeProcessModuleCss = (
   };
 };
 
-function makeProcess(plugins: AcceptedPlugin[]) {
+function makeProcess(plugins: AcceptedPlugin[], processOptions?: PostCSSProcessOptions) {
   const processor = postcss(plugins);
   return (input: string, filePath: string) =>
-    processor.process(input, { from: filePath, map: false });
+    processor.process(input, { ...processOptions, from: filePath, map: false });
 }
