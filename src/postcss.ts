@@ -1,20 +1,18 @@
-import postcss, { AcceptedPlugin } from "postcss";
+import postcss, { AcceptedPlugin, Result } from "postcss";
 import cssModules from "postcss-modules";
 import { PostCSSProcessOptions } from "./types";
 
 interface Processor {
   (input: string, filePath: string): Promise<
-    [css: string, classes?: Record<string, string>]
+    [result: Result, classes?: Record<string, string>]
   >;
 }
 
 export const makeProcessCSS = (plugins: AcceptedPlugin[], processOptions: PostCSSProcessOptions): Processor => {
-  if (plugins.length === 0) return (input: string) => Promise.resolve([input]);
-
   const process = makeProcess(plugins, processOptions);
   return async (input: string, filePath: string) => {
     const result = await process(input, filePath);
-    return [result.css];
+    return [result];
   };
 };
 
@@ -36,12 +34,13 @@ export const makeProcessModuleCss = (
   return async (input: string, filePath: string) => {
     classes = {};
     const result = await process(input, filePath);
-    return [result.css, classes];
+    return [result, classes];
   };
 };
 
 function makeProcess(plugins: AcceptedPlugin[], processOptions?: PostCSSProcessOptions) {
   const processor = postcss(plugins);
-  return (input: string, filePath: string) =>
-    processor.process(input, { ...processOptions, from: filePath, map: false });
+  return (input: string, filePath: string) => {
+    return processor.process(input, { ...processOptions, from: filePath, map: { inline: true } });
+  }
 }

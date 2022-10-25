@@ -3,6 +3,7 @@ import path from "path";
 import { makeProcessCSS, makeProcessModuleCss } from "./postcss";
 import { FakeCache, TransformCache } from "./transformCache";
 import { PostCSSPlugin } from "./types";
+import { Dependencies } from "./dependencies";
 
 const virtualModuleExt = "postcss-module";
 const virtualModuleFilter = new RegExp(`\.${virtualModuleExt}$`);
@@ -44,30 +45,40 @@ const postCSSPlugin: PostCSSPlugin = ({
         async ({ path: filePath, pluginData }) => {
           if (pluginData?.noModule) return;
 
-          const [css, classes] = await cache.getOrTransform(filePath, (input) =>
+          const [result, classes] = await cache.getOrTransform(filePath, (input) =>
             processModuleCss(input, filePath)
           );
 
+          const deps = new Dependencies();
+          deps.processMessages(result.messages);
+          deps.addFile(filePath);
+
           const modulePath = `${filePath}.${virtualModuleExt}`;
-          cssMap.set(modulePath, css);
+          cssMap.set(modulePath, result.css);
           return {
             contents: makeCssModuleJs(modulePath, classes),
             loader: "js",
             resolveDir: path.dirname(filePath),
-            watchFiles: [filePath],
+            watchFiles: deps.getFiles(),
+            watchDirs: deps.getDirs(),
           };
         }
       );
 
       build.onLoad({ filter }, async ({ path: filePath }) => {
-        const [css] = await cache.getOrTransform(filePath, (input) =>
+        const [result] = await cache.getOrTransform(filePath, (input) =>
           processCSS(input, filePath)
         );
 
+        const deps = new Dependencies();
+        deps.processMessages(result.messages);
+
         return {
-          contents: css,
+          contents: result.css,
           loader: "css",
           resolveDir: path.dirname(filePath),
+          watchFiles: deps.getFiles(),
+          watchDirs: deps.getDirs(),
         };
       });
 

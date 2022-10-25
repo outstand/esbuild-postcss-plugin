@@ -13,7 +13,7 @@ type PostCSSPluginOptions = {
 
 export type PostCSSPlugin = (options?: PostCSSPluginOptions) => Plugin;
 
-export type PostCSSProcessOptions = Omit<ProcessOptions, "from" | "map" | "to">
+export type PostCSSProcessOptions = Omit<ProcessOptions, "from" | "to">
 
 type GenerateScopedNameFunction = (
   name: string,
